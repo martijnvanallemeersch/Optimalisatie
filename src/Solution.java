@@ -124,7 +124,7 @@ class Solution
 //            }
 
                 for (Customer c : customers) {
-                    if (c.IsRouted == false) {
+                    if (c.IsRouted == false)    {
                         if (Vehicles[VehIndex].CheckIfFits(c.c)) {
                             //kijken als de tijd tussen de customers plus 40 minuten service time nog binnen het tijdsbestek van de chauffeur liggen
                             //TODO 40 automatisch inlezen!!
@@ -207,7 +207,7 @@ class Solution
 
         int SwapIndexA = -1, SwapIndexB = -1, SwapRouteFrom =-1, SwapRouteTo=-1;
 
-        int MAX_ITERATIONS = 10000;
+        int MAX_ITERATIONS = 1000000;
         int iteration_number= 0;
 
         int DimensionCustomer = costMatrix[1].length;
@@ -243,35 +243,36 @@ class Solution
                             if ((VehIndexFrom == VehIndexTo) ||  greedyRoute.v[VehIndexTo].CheckIfFits(MovingNodeDemand) ) {
 
 
-                                if (((VehIndexFrom == VehIndexTo) && ((j == i) || (j == i - 1))) == false)  // Not a move that Changes solution cost
-                                {
-                                    double MinusCost1 = costMatrix[RouteFrom.get(i - 1).locationId][RouteFrom.get(i).locationId];
-                                    double MinusCost2 = costMatrix[RouteFrom.get(i).locationId][RouteFrom.get(i + 1).locationId];
-                                    double MinusCost3 = costMatrix[RouteTo.get(j).locationId][RouteTo.get(j + 1).locationId];
+                                    if (((VehIndexFrom == VehIndexTo) && ((j == i) || (j == i - 1))) == false)  // Not a move that Changes solution cost
+                                    {
+                                        double MinusCost1 = costMatrix[RouteFrom.get(i - 1).locationId][RouteFrom.get(i).locationId];
+                                        double MinusCost2 = costMatrix[RouteFrom.get(i).locationId][RouteFrom.get(i + 1).locationId];
+                                        double MinusCost3 = costMatrix[RouteTo.get(j).locationId][RouteTo.get(j + 1).locationId];
 
-                                    double AddedCost1 = costMatrix[RouteFrom.get(i - 1).locationId][RouteFrom.get(i + 1).locationId];
-                                    double AddedCost2 = costMatrix[RouteTo.get(j).locationId][RouteFrom.get(i).locationId];
-                                    double AddedCost3 = costMatrix[RouteFrom.get(i).locationId][RouteTo.get(j + 1).locationId];
+                                        double AddedCost1 = costMatrix[RouteFrom.get(i - 1).locationId][RouteFrom.get(i + 1).locationId];
+                                        double AddedCost2 = costMatrix[RouteTo.get(j).locationId][RouteFrom.get(i).locationId];
+                                        double AddedCost3 = costMatrix[RouteFrom.get(i).locationId][RouteTo.get(j + 1).locationId];
 
-                                    //Check if the move is a Tabu! - If it is Tabu break
-                                    if ((TABU_Matrix[RouteFrom.get(i - 1).locationId][RouteFrom.get(i+1).locationId] != 0)
-                                            || (TABU_Matrix[RouteTo.get(j).locationId][RouteFrom.get(i).locationId] != 0)
-                                            || (TABU_Matrix[RouteFrom.get(i).locationId][RouteTo.get(j+1).locationId] != 0)) {
-                                        break;
-                                    }
+                                        //Check if the move is a Tabu! - If it is Tabu break
+                                        if ((TABU_Matrix[RouteFrom.get(i - 1).locationId][RouteFrom.get(i+1).locationId] != 0)
+                                                || (TABU_Matrix[RouteTo.get(j).locationId][RouteFrom.get(i).locationId] != 0)
+                                                || (TABU_Matrix[RouteFrom.get(i).locationId][RouteTo.get(j+1).locationId] != 0)) {
+                                            break;
+                                        }
 
-                                    NeigthboorCost = AddedCost1 + AddedCost2 + AddedCost3
-                                            - MinusCost1 - MinusCost2 - MinusCost3;
+                                        NeigthboorCost = AddedCost1 + AddedCost2 + AddedCost3
+                                                - MinusCost1 - MinusCost2 - MinusCost3;
 
-                                    if (NeigthboorCost < BestNCost) {
-                                        BestNCost = NeigthboorCost;
-                                        SwapIndexA = i;
-                                        SwapIndexB = j;
-                                        SwapRouteFrom = VehIndexFrom;
-                                        SwapRouteTo = VehIndexTo;
+                                        if (NeigthboorCost < BestNCost) {
+                                            BestNCost = NeigthboorCost;
+                                            SwapIndexA = i;
+                                            SwapIndexB = j;
+                                            SwapRouteFrom = VehIndexFrom;
+                                            SwapRouteTo = VehIndexTo;
+                                        }
                                     }
                                 }
-                            }
+
                         }
                     }
                 }
@@ -339,6 +340,7 @@ class Solution
             {
                 Termination = true;
             }
+            measure(greedyRoute);
         }
 
         greedyRoute.v = VehiclesForBestSolution;
@@ -368,6 +370,22 @@ class Solution
                     VehiclesForBestSolution[j].Route.add(n);
                 }
             }
+        }
+    }
+
+    //Updates telkens de nieuwe curLoad van een voertuig
+    //TODO moet nog verbeteren is een test!!
+    public void measure(Route r)
+    {
+        for(Vehicle v : r.v)
+        {
+            int load = 0;
+            for(Customer c : v.Route)
+            {
+                load = load + c.c;
+            }
+
+            v.load = load;
         }
     }
 
