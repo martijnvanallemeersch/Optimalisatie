@@ -14,7 +14,7 @@ public class  VRP{
 
         //Problem Parameters
         int NoOfCustomers = problem.size();
-        int NoOfVehicles = 10;
+        int NoOfVehicles = 40;
         int VehicleCap = 100;
 
         //Tabu Parameter
@@ -38,7 +38,7 @@ public class  VRP{
         System.out.println("Attempting to resolve Vehicle Routing Problem (VRP) for "+NoOfCustomers+
                 " Customers and "+NoOfVehicles+" Vehicles"+" with "+VehicleCap + " units of capacity\n");
 
-        Solution s = new Solution(NoOfCustomers,40,100,vehicles);
+        Solution s = new Solution(NoOfCustomers,NoOfVehicles,VehicleCap,vehicles);
 
         ArrayList<Route> ar = new ArrayList<>();
         double minCost = Integer.MAX_VALUE;

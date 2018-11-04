@@ -23,11 +23,12 @@ class Vehicle
         this.Route.clear();
     }
 
-    public void AddNode(Customer Customer )//Add Customer to Vehicle Route
+    public void AddNode(Customer Customer,int time )//Add Customer to Vehicle Route
     {
         Route.add(Customer);
         this.load +=  Customer.c;
         this.curLoc = Customer.locationId;
+        this.curWorkTime += time;
     }
 
     public boolean CheckIfFits(int dem) //Check if we have Capacity Violation

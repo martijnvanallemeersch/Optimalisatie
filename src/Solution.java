@@ -20,8 +20,8 @@ class Solution
         this.NoOfVehicles = VechNum;
         this.NoOfCustomers = CustNum;
         this.Cost = 0;
-        Vehicles = new Vehicle[NoOfVehicles];
-        VehiclesForBestSolution =  new Vehicle[NoOfVehicles];
+        Vehicles = new Vehicle[VechNum];
+        VehiclesForBestSolution =  new Vehicle[VechNum];
 
         //TODO rechtstreeks vehicles doorgeven zoals hieronder werkt precies niet, reden weet ik niet nog eens bekijken!!
 
@@ -34,15 +34,15 @@ class Solution
 
         for (Vehicle v : vehicles)
         {
-            Vehicles[index] = new Vehicle(index+1,100,600,v.curLoc);
-            VehiclesForBestSolution[index] = new Vehicle(index+1,100,600,v.curLoc);
+            Vehicles[index] = new Vehicle(index+1,200,300,v.curLoc);
+            VehiclesForBestSolution[index] = new Vehicle(index+1,100,300,v.curLoc);
 
             Customer depot = new Customer(v.curLoc,0);
             depot.IsDepot = true;
             Vehicles[index].startLoc = v.curLoc;
             VehiclesForBestSolution[index].startLoc = v.curLoc;
-            Vehicles[index].AddNode(depot);
-            VehiclesForBestSolution[index].AddNode(depot);
+            Vehicles[index].AddNode(depot,0);
+            VehiclesForBestSolution[index].AddNode(depot,0);
 
             index++;
         }
@@ -87,7 +87,7 @@ class Solution
 
         int VehIndex = index;
 
-        //om nieuwe Route uit te testen alle parameters terug op nul zetten!!
+        //Om nieuwe Route uit te testen alle parameters terug op nul zetten!!
 
         this.Cost = 0;
 
@@ -100,7 +100,8 @@ class Solution
         {
             v.Route = new ArrayList<>();
             Customer depot = new Customer(v.curLoc,0);
-            v.AddNode(depot);
+            // tweede parameter van addNode is hier nul omdat we de startdepo erin stoppen, dus nog niet echt gereden!
+            v.AddNode(depot,0);
             v.load = 0;
         }
 
@@ -126,15 +127,18 @@ class Solution
                 for (Customer c : customers) {
                     if (c.IsRouted == false)    {
                         if (Vehicles[VehIndex].CheckIfFits(c.c)) {
-                            //kijken als de tijd tussen de customers plus 40 minuten service time nog binnen het tijdsbestek van de chauffeur liggen
-                            //TODO 40 automatisch inlezen!!
-                            //TODO Nu wordt er niet gecontroleerd als de laatste rit, dus de rit van de laatste klant tot het depo als deze nog binnen de tijd zit.
+                            if(Vehicles[VehIndex].CheckIfTimeFits(timeMatrix[Vehicles[VehIndex].curLoc][c.locationId] + timeMatrix[c.locationId][Vehicles[VehIndex].startLoc]))
+                            {
+                                //kijken als de tijd tussen de customers plus 40 minuten service time nog binnen het tijdsbestek van de chauffeur liggen
+                                //TODO 40 automatisch inlezen!!
+                                //TODO Nu wordt er niet gecontroleerd als de laatste rit, dus de rit van de laatste klant tot het depo als deze nog binnen de tijd zit.
 
 
-                            CandCost = distanceMatrix[Vehicles[VehIndex].curLoc][c.locationId];
-                            if (minCost > CandCost) {
-                                minCost = CandCost;
-                                Candidate = c;
+                                CandCost = distanceMatrix[Vehicles[VehIndex].curLoc][c.locationId];
+                                if (minCost > CandCost) {
+                                    minCost = CandCost;
+                                    Candidate = c;
+                                }
                             }
                         }
                     }
@@ -148,12 +152,15 @@ class Solution
                         //maximum capaciteit voor deze truck is bereikt (geen candidates), dus terugkeren naar depot.
                         // TODO nul is voorlopig de locatie van onze depot, bij meerdere depots moet dit wijzigen!!
                         if (Vehicles[VehIndex].curLoc != 0) {
-                            EndCost = distanceMatrix[Vehicles[VehIndex].curLoc][0];
+                            EndCost = distanceMatrix[Vehicles[VehIndex].curLoc][Vehicles[VehIndex].startLoc];
 
                             Customer depot = new Customer(Vehicles[VehIndex].startLoc,0);
                             depot.IsDepot = true;
 
-                            Vehicles[VehIndex].AddNode(depot);
+                            //get time to go to the depot
+                            int t = timeMatrix[Vehicles[VehIndex].curLoc][Vehicles[VehIndex].startLoc];
+                            Vehicles[VehIndex].AddNode(depot,t);
+
 
                             this.Cost +=  EndCost;
                         }
@@ -171,18 +178,20 @@ class Solution
                 else
                 {
                     //Als een nieuwe Candidate gevonden is deze toevoegen aan de truck
-                    Vehicles[VehIndex].AddNode(Candidate);
+                    int t = timeMatrix[Vehicles[VehIndex].curLoc][Candidate.locationId];
+                    Vehicles[VehIndex].AddNode(Candidate,t);
                     Candidate.IsRouted = true;
                     this.Cost += minCost;
                 }
             }
 
             // TODO nul is voorlopig de locatie van onze depot, bij meerdere depots moet dit wijzigen!!
-            EndCost = distanceMatrix[Vehicles[VehIndex].curLoc][0];
+            EndCost = distanceMatrix[Vehicles[VehIndex].curLoc][Vehicles[VehIndex].startLoc];
 
             Customer depot = new Customer(Vehicles[VehIndex].startLoc,0);
             depot.IsDepot = true;
-            Vehicles[VehIndex].AddNode(depot);
+            //depot dus tweede parameter nul!
+            Vehicles[VehIndex].AddNode(depot,0);
 
 
             this.Cost +=  EndCost;
@@ -190,7 +199,6 @@ class Solution
             Route r = new Route(Vehicles, Cost);
 
         return r;
-
     }
     public void TabuSearch(int TABU_Horizon, int[][] costMatrix,int[][] timeMatrix, Route greedyRoute) {
 
@@ -207,7 +215,7 @@ class Solution
 
         int SwapIndexA = -1, SwapIndexB = -1, SwapRouteFrom =-1, SwapRouteTo=-1;
 
-        int MAX_ITERATIONS = 1000000;
+        int MAX_ITERATIONS = 100000;
         int iteration_number= 0;
 
         int DimensionCustomer = costMatrix[1].length;
@@ -233,16 +241,15 @@ class Solution
                         for (int j = 0; (j < RouteTolength - 1); j++) {//Not possible to move after last Depot!
 
                             MovingNodeDemand = RouteFrom.get(i).c;
-                           // locationFrom = RouteFrom.get(i).locationId;
+                            locationFrom = RouteFrom.get(i).locationId;
                            // locationTo = RouteTo.get(i).locationId;
 
-                            int timeToCustomer = timeMatrix[locationFrom][locationTo];
+                            //int timeToCustomer = timeMatrix[locationFrom][locationTo];
 
                             //|| greedyRoute.v[VehIndexTo].CheckIfTimeFits(timeToCustomer)
 
-                            if ((VehIndexFrom == VehIndexTo) ||  greedyRoute.v[VehIndexTo].CheckIfFits(MovingNodeDemand) ) {
-
-
+                            if ((VehIndexFrom == VehIndexTo) ||  (greedyRoute.v[VehIndexTo].CheckIfFits(MovingNodeDemand) && Vehicles[VehIndexTo].CheckIfTimeFits(timeMatrix[Vehicles[VehIndexTo].curLoc][locationFrom] + timeMatrix[locationFrom][Vehicles[VehIndexTo].startLoc])))
+                            {
                                     if (((VehIndexFrom == VehIndexTo) && ((j == i) || (j == i - 1))) == false)  // Not a move that Changes solution cost
                                     {
                                         double MinusCost1 = costMatrix[RouteFrom.get(i - 1).locationId][RouteFrom.get(i).locationId];
@@ -340,7 +347,8 @@ class Solution
             {
                 Termination = true;
             }
-            measure(greedyRoute);
+            measureLoad(greedyRoute);
+            measureTime(greedyRoute,timeMatrix);
         }
 
         greedyRoute.v = VehiclesForBestSolution;
@@ -375,7 +383,7 @@ class Solution
 
     //Updates telkens de nieuwe curLoad van een voertuig
     //TODO moet nog verbeteren is een test!!
-    public void measure(Route r)
+    public void measureLoad(Route r)
     {
         for(Vehicle v : r.v)
         {
@@ -386,6 +394,28 @@ class Solution
             }
 
             v.load = load;
+        }
+    }
+
+    //Updates telkens de nieuwe workTime berekenen van een voertuig
+    //TODO moet nog verbeteren is een test!!
+    public void measureTime(Route r, int[][] timeMatrix)
+    {
+        for(Vehicle v : r.v)
+        {
+            int workTime = 0;
+            Customer vorigeKlant = null;
+            for(Customer c : v.Route)
+            {
+                if(vorigeKlant != null)
+                {
+                    workTime = workTime + timeMatrix[vorigeKlant.locationId][c.locationId];
+                }
+
+                vorigeKlant = c;
+            }
+
+            v.curWorkTime = workTime;
         }
     }
 
