@@ -16,4 +16,11 @@ class Customer{
         this.locationId = locationId;
         this.machineId = machineId;
     }
+
+    public Customer(int machineId){
+        //this.x = x;
+        //this.y = y;
+        //this.locationId = locationId;
+        this.machineId = machineId;
+    }
 }

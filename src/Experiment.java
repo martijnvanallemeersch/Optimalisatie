@@ -5,7 +5,7 @@ public class Experiment {
         String outdir = "output/";
         //String problemdir = "tests/";
         String [] probs = {
-                "tvh_problem_1"
+                "tvh_problem_3"
         };
 
         for (String f:probs){

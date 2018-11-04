@@ -23,7 +23,7 @@ public class VRProblem {
         Scanner s = null;
 
         try {
-            s = new Scanner(new File("src/tvh_problem_1.txt"));
+            s = new Scanner(new File("src/" + id));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -117,7 +117,7 @@ public class VRProblem {
                 while(!actualRead.equals(""))
                 {
                     String[] splited = actualRead.replaceAll("(^\\s+|\\s+$)", "").split("\\s+");
-                    customers.add(new Customer(Integer.parseInt(splited[2]),Integer.parseInt(splited[1])));
+                    customers.add(new Customer(Integer.parseInt(splited[1])));
 
                     if(s.hasNextLine())
                         actualRead = s.nextLine();
@@ -182,7 +182,9 @@ public class VRProblem {
             {
                 int typeId = machines.get(c.machineId).machineTypeId;
                 int weightMachine = machine_Types.get(typeId);
+                int locationId = machines.get(c.machineId).locationId;
                 c.c = weightMachine;
+                c.locationId = locationId;
             }
         }
     }
